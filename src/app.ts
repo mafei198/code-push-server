@@ -71,7 +71,12 @@ if (config.common.storageType === 'local') {
             throw e;
         }
         logger.debug(`static download uri value: ${config.local.public}`);
-        app.use(config.local.public, express.static(localStorageDir));
+        app.use(config.local.public, (req, res, next) => {
+            // Set cache control headers
+            res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year
+            res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString());
+            next();
+        }, express.static(localStorageDir));
     } else {
         logger.error('please config local storageDir');
     }
