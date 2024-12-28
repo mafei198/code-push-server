@@ -73,10 +73,23 @@ if (config.common.storageType === 'local') {
         logger.debug(`static download uri value: ${config.local.public}`);
         app.use(config.local.public, (req, res, next) => {
             // Set cache control headers
-            res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year
-            res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString());
+            res.set({
+                'Cache-Control': 'public, max-age=31536000', // 1 year
+                'Expires': new Date(Date.now() + 31536000000).toUTCString(),
+                'Pragma': 'public' // 增加 Pragma 头部
+            });
             next();
-        }, express.static(localStorageDir));
+        }, express.static(localStorageDir, {
+            // 在 static 中也设置缓存控制
+            maxAge: 31536000000,
+            setHeaders: (res) => {
+                res.set({
+                    'Cache-Control': 'public, max-age=31536000',
+                    'Expires': new Date(Date.now() + 31536000000).toUTCString(),
+                    'Pragma': 'public'
+                });
+            }
+        }));
     } else {
         logger.error('please config local storageDir');
     }
